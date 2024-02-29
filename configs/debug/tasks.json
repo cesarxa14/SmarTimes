@@ -1,0 +1,35 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "type": "npm",
+        "script": "build",
+        "group": "build",
+        "label": "npm: build - app"
+      },
+      {
+        "type": "shell",
+        "label": "create_build_folder",
+        "command": "mkdir -p build"
+      },
+      {
+        "type": "shell",
+        "label": "clean_app",
+        "command": "rm ./build -r -fo"
+      },
+      {
+        "label": "prepare_app_to_debug",
+        "type": "shell",
+        "command": "echo prepare app to debug",
+        "dependsOrder": "sequence",
+        "dependsOn": ["create_build_folder", "npm: build - app"]
+      },
+      {
+        "label": "clean_app_after_debug",
+        "type": "shell",
+        "command": "echo clean app after debug",
+        "dependsOrder": "sequence",
+        "dependsOn": ["clean_app"]
+      }
+    ]
+  }

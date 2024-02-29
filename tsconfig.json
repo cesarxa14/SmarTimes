@@ -1,0 +1,14 @@
+{
+  "ts-node": {
+    "files": true
+  },
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "outDir": "build",
+    "rootDir": "./",
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "allowJs": true
+  },
+}

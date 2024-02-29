@@ -1,0 +1,36 @@
+-- Table: public.error_status
+
+-- DROP TABLE IF EXISTS public.error_status;
+
+CREATE TABLE IF NOT EXISTS public.error_status
+(
+    id integer NOT NULL,
+    status text COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT error_status_pkey PRIMARY KEY (id)
+)
+
+TABLESPACE pg_default;
+
+-- Table: public.error
+
+-- DROP TABLE IF EXISTS public.error;
+
+CREATE TABLE IF NOT EXISTS public.error
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
+    message text COLLATE pg_catalog."default",
+    stack text COLLATE pg_catalog."default",
+    url text COLLATE pg_catalog."default",
+    path text COLLATE pg_catalog."default",
+    error_status integer,
+    request_body text COLLATE pg_catalog."default",
+    "time" timestamp with time zone,
+    CONSTRAINT error_pkey PRIMARY KEY (id),
+    CONSTRAINT status FOREIGN KEY (error_status)
+        REFERENCES public.error_status (id) MATCH SIMPLE
+        ON UPDATE RESTRICT
+        ON DELETE RESTRICT
+)
+
+TABLESPACE pg_default;
+  

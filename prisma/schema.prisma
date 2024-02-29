@@ -1,0 +1,485 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_DEVELOPMENT_LOCAL")
+}
+
+model bank {
+  id             Int              @id @default(autoincrement())
+  name           String           @unique
+  email          String
+  phone          String
+  owner_id       Int
+  available      Boolean          @default(true)
+  owner          user             @relation(fields: [owner_id], references: [id], onUpdate: Restrict, map: "owner_uid_fk")
+  bank_seller    bank_seller[]
+  bank_manager   bank_manager[]
+  lottery        lottery[]
+  operation      operation[]
+  seller_manager seller_manager[]
+
+  @@index(fields: [owner_id])
+}
+
+model bank_manager {
+  bank_id    Int
+  manager_id Int
+  bank       bank    @relation(fields: [bank_id], references: [id], onUpdate: Restrict, map: "bank_id")
+  manager    manager @relation(fields: [manager_id], references: [user_id], onUpdate: Restrict, map: "manager_id")
+
+  @@id([bank_id, manager_id])
+}
+
+model bank_seller {
+  bank_id   Int
+  seller_id Int
+  bank      bank   @relation(fields: [bank_id], references: [id], onUpdate: Restrict, map: "bank_id")
+  seller    seller @relation(fields: [seller_id], references: [user_id], onUpdate: Restrict, map: "seller_id")
+
+  @@id([bank_id, seller_id])
+}
+
+model ball_type {
+  id                               Int                               @id
+  name                             String
+  color                            String
+  reventado_lottery_ball_types     reventado_lottery_ball_type[]
+  reventado_lottery_winner_numbers reventado_lottery_winner_number[]
+}
+
+model reventado_bet {
+  id            Int        @id @default(autoincrement())
+  amount        Float
+  bet_number    bet_number @relation(fields: [bet_number_id], references: [id])
+  bet_number_id Int        @unique
+}
+
+model bet_number {
+  id            Int            @id @default(autoincrement())
+  number        Int
+  amount        Float
+  ticket_id     Int
+  ticket        ticket         @relation(fields: [ticket_id], references: [id], onUpdate: Restrict, map: "ticket_id")
+  reventado_bet reventado_bet?
+}
+
+model error {
+  id                                            BigInt        @id @default(autoincrement())
+  message                                       String?
+  stack                                         String?
+  url                                           String?
+  path                                          String?
+  error_status                                  Int?
+  request_body                                  String?
+  time                                          DateTime?     @db.Timestamptz(6)
+  error_status_error_error_statusToerror_status error_status? @relation("error_error_statusToerror_status", fields: [error_status], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "status")
+}
+
+model error_status {
+  id                                     Int     @id
+  status                                 String
+  error_error_error_statusToerror_status error[] @relation("error_error_statusToerror_status")
+}
+
+model lottery {
+  id                        Int                         @id @default(autoincrement())
+  name                      String
+  closing_time              DateTime                    @db.Timestamptz(6)
+  lottery_time              DateTime                    @db.Timestamptz(6)
+  lottery_type_id           Int
+  bank_id                   Int
+  restricted_amount         Float?
+  is_deleted                Boolean                     @default(false)
+  reventado_lottery         reventado_lottery?
+  bank                      bank                        @relation(fields: [bank_id], references: [id], onUpdate: Restrict, map: "bank_id")
+  lottery_type              lottery_type                @relation(fields: [lottery_type_id], references: [id], onUpdate: Restrict, map: "lottery_type_id")
+  lottery_programming       lottery_programming[]
+  seller_lottery            seller_lottery[]
+  seller_commission         seller_commision[]
+  manager_commission        manager_commission[]
+  lottery_prizes            lottery_prize[]
+  lottery_monazo_types      lottery_monazo_type[]
+  parley_lottery            parley_lottery?
+  restricted_number         restricted_number[]
+  seller_restricted_numbers seller_restricted_numbers[]
+}
+
+model lottery_monazo_type {
+  lottery_id           Int
+  monazo_type_id       Int
+  main_multiplier      Float
+  secondary_multiplier Float
+  lottery              lottery     @relation(fields: [lottery_id], references: [id], onUpdate: Restrict, map: "lottery_id")
+  monazo_type          monazo_type @relation(fields: [monazo_type_id], references: [id], onUpdate: Restrict, map: "monazo_type_id")
+
+  @@id([lottery_id, monazo_type_id])
+}
+
+model lottery_prize {
+  id                     Int                     @id @default(autoincrement())
+  name                   String
+  multiplier             Float
+  lottery_id             Int
+  lottery                lottery                 @relation(fields: [lottery_id], references: [id], onUpdate: Restrict, map: "lottery_id")
+  is_deleted             Boolean                 @default(false)
+  lottery_winner_numbers lottery_winner_number[]
+}
+
+model lottery_programming {
+  id                                    Int                                     @id @default(autoincrement())
+  lottery_id                            Int
+  is_computed                           Boolean                                 @default(false)
+  billing_statement                     billing_statement?
+  date                                  DateTime                                @db.Timestamptz(6)
+  lottery                               lottery                                 @relation(fields: [lottery_id], references: [id], onUpdate: Restrict, map: "lottery_id")
+  lottery_ticket                        lottery_ticket[]
+  is_deleted                            Boolean                                 @default(false)
+  lottery_winner_numbers                lottery_winner_number[]
+  tickets                               ticket[]
+  reventado_lottery_winner_number       reventado_lottery_winner_number?
+  monazo_lottery_winner_number          monazo_lottery_winner_number?
+  parley_lottery_winner_number          parley_lottery_winner_number?
+  programming_restricted_numbers        programming_restricted_numbers[]
+  seller_programming_restricted_numbers seller_programming_restricted_numbers[]
+}
+
+model lottery_ticket {
+  id                     Int                 @id @default(autoincrement())
+  seller_id              Int
+  lottery_programming_id Int
+  buying_date            DateTime            @db.Timestamptz(6)
+  lottery_programming    lottery_programming @relation(fields: [lottery_programming_id], references: [id], onUpdate: Restrict, map: "lottery_programming_id")
+  seller                 seller              @relation(fields: [seller_id], references: [user_id], onUpdate: Restrict, map: "seller_uid")
+}
+
+model lottery_type {
+  id      Int       @id(map: "lotery_type_pkey")
+  name    String
+  lottery lottery[]
+}
+
+model lottery_winner_number {
+  id                     Int                 @id @default(autoincrement())
+  number                 Int
+  lottery_programming_id Int
+  lottery_prize_id       Int
+  lottery_programming    lottery_programming @relation(fields: [lottery_programming_id], references: [id], onUpdate: Restrict, map: "lottery_programming_id")
+  lottery_prize          lottery_prize       @relation(fields: [lottery_prize_id], references: [id], onUpdate: Restrict, map: "lottery_prize_id")
+}
+
+model manager {
+  user_id            Int                  @id
+  user               user                 @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "user_id")
+  bank_manager       bank_manager[]
+  seller_manager     seller_manager[]
+  manager_commission manager_commission[]
+}
+
+model manager_commission {
+  manager_id Int
+  lottery_id Int
+  commission Float
+  lottery    lottery @relation(fields: [lottery_id], references: [id], onUpdate: Restrict, map: "lottery_id")
+  manager    manager @relation(fields: [manager_id], references: [user_id], onUpdate: Restrict, map: "manager_id")
+
+  @@id([manager_id, lottery_id])
+}
+
+model monazo_bet_number {
+  id             Int         @id @default(autoincrement())
+  first_number   Int
+  second_number  Int
+  third_number   Int
+  amount         Float
+  ticket_id      Int
+  monazo_type_id Int
+  ticket         ticket      @relation(fields: [ticket_id], references: [id], onUpdate: Restrict, map: "ticket_id")
+  monazo_type    monazo_type @relation(fields: [monazo_type_id], references: [id], onUpdate: Restrict, map: "monazo_type_id")
+}
+
+model monazo_lottery_winner_number {
+  id                     Int                 @id @default(autoincrement())
+  first_number           Int
+  second_number          Int
+  third_number           Int
+  lottery_programming_id Int                 @unique
+  lottery_programming    lottery_programming @relation(fields: [lottery_programming_id], references: [id], onUpdate: Restrict, map: "lottery_programming_id")
+}
+
+model monazo_type {
+  id                   Int                   @id
+  name                 String
+  lottery_monazo_types lottery_monazo_type[]
+  monazo_bet_numbers   monazo_bet_number[]
+}
+
+model operation {
+  id                Int            @id @default(autoincrement())
+  bank_id           Int
+  seller_id         Int
+  amount            Float
+  operation_type_id Int
+  bank              bank           @relation(fields: [bank_id], references: [id], onUpdate: Restrict, map: "bank_id")
+  operation_type    operation_type @relation(fields: [operation_type_id], references: [id], onUpdate: Restrict, map: "operation_type_id")
+  seller            seller         @relation(fields: [seller_id], references: [user_id], onUpdate: Restrict, map: "seller_id")
+  responsible_id    Int
+  responsible       user           @relation(fields: [responsible_id], references: [id], onUpdate: Restrict, map: "responsible_id")
+}
+
+model operation_type {
+  id        Int         @id
+  name      String
+  operation operation[]
+}
+
+model parley_bet_number {
+  id            Int    @id @default(autoincrement())
+  first_number  Int
+  second_number Int
+  amount        Float
+  ticket_id     Int
+  ticket        ticket @relation(fields: [ticket_id], references: [id], onUpdate: Restrict, map: "ticket_id")
+}
+
+model parley_lottery {
+  lottery_id Int     @id
+  multiplier Float
+  lottery    lottery @relation(fields: [lottery_id], references: [id], onUpdate: Restrict, map: "lottery_id")
+}
+
+model parley_lottery_winner_number {
+  id                     Int                 @id @default(autoincrement())
+  first_number           Int
+  second_number          Int
+  third_number           Int
+  lottery_programming_id Int                 @unique
+  lottery_programming    lottery_programming @relation(fields: [lottery_programming_id], references: [id], onUpdate: Restrict, map: "lottery_programming_id")
+}
+
+model permission {
+  id              Int               @id
+  name            String
+  role_permission role_permission[]
+}
+
+model reventado_lottery {
+  lottery_id                   Int                           @id
+  multiplier                   Float
+  lottery                      lottery                       @relation(fields: [lottery_id], references: [id], onUpdate: Restrict, map: "lottery_id")
+  reventado_lottery_ball_types reventado_lottery_ball_type[]
+}
+
+model reventado_lottery_ball_type {
+  reventado_lottery_id Int
+  ball_type_id         Int
+  multiplier           Float             @default(0)
+  reventado_lottery    reventado_lottery @relation(fields: [reventado_lottery_id], references: [lottery_id], onUpdate: Restrict, map: "reventado_lottery_id")
+  ball_type            ball_type         @relation(fields: [ball_type_id], references: [id], onUpdate: Restrict, map: "bet_ball_id")
+
+  @@id([reventado_lottery_id, ball_type_id])
+}
+
+model reventado_lottery_winner_number {
+  id                     Int                 @id @default(autoincrement())
+  number                 Int
+  lottery_programming_id Int                 @unique
+  ball_type_id           Int
+  lottery_programming    lottery_programming @relation(fields: [lottery_programming_id], references: [id], onUpdate: Restrict, map: "lottery_programming_id")
+  ball_type              ball_type           @relation(fields: [ball_type_id], references: [id], onUpdate: Restrict, map: "ball_type_id")
+}
+
+model role {
+  id              Int               @id
+  name            String
+  role_permission role_permission[]
+  users           user[]
+}
+
+model role_permission {
+  role_id       Int
+  permission_id Int
+  permission    permission @relation(fields: [permission_id], references: [id], onUpdate: Restrict, map: "permission_id")
+  role          role       @relation(fields: [role_id], references: [id], onUpdate: Restrict, map: "role_id")
+
+  @@id([role_id, permission_id])
+}
+
+model seller {
+  user_id                               Int                                     @id
+  balance                               Float                                   @default(0)
+  debts                                 Float                                   @default(0)
+  bank_seller                           bank_seller[]
+  lottery_ticket                        lottery_ticket[]
+  operation                             operation[]
+  user                                  user                                    @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "user_id")
+  seller_lottery                        seller_lottery[]
+  seller_manager                        seller_manager[]
+  seller_commission                     seller_commision[]
+  tickets                               ticket[]
+  seller_billing_statement              seller_billing_statement[]
+  seller_programming_restricted_numbers seller_programming_restricted_numbers[]
+}
+
+model seller_commision {
+  seller_id  Int
+  lottery_id Int
+  commission Float
+  seller     seller  @relation(fields: [seller_id], references: [user_id], onUpdate: Restrict, map: "seller_id")
+  lottery    lottery @relation(fields: [lottery_id], references: [id], onUpdate: Restrict, map: "lottery_id")
+
+  @@id([seller_id, lottery_id])
+}
+
+model seller_lottery {
+  seller_id  Int
+  lottery_id Int
+  lottery    lottery @relation(fields: [lottery_id], references: [id], onUpdate: Restrict, map: "lottery_id")
+  seller     seller  @relation(fields: [seller_id], references: [user_id], onUpdate: Restrict, map: "seller_id")
+
+  @@id([seller_id, lottery_id])
+}
+
+model user {
+  id             Int              @id @default(autoincrement())
+  uid            String           @unique
+  role_id        Int
+  email          String           @unique
+  phone          String           @unique
+  bank           bank[]
+  license        license[]
+  seller         seller?
+  manager        manager?
+  role           role             @relation(fields: [role_id], references: [id], onUpdate: Restrict, map: "role_id")
+  operation      operation[]
+  license_update license_update[]
+
+  @@index(fields: [role_id])
+}
+
+model seller_manager {
+  seller_id  Int
+  manager_id Int
+  bank_id    Int
+  seller     seller  @relation(fields: [seller_id], references: [user_id], onUpdate: Restrict, map: "seller_id")
+  manager    manager @relation(fields: [manager_id], references: [user_id], onUpdate: Restrict, map: "manager_id")
+  bank       bank    @relation(fields: [bank_id], references: [id], onUpdate: Restrict, map: "bank_id")
+
+  @@id([seller_id, manager_id, bank_id])
+}
+
+model ticket {
+  id                     Int                 @id @default(autoincrement())
+  buyer_name             String
+  purchase_date          DateTime            @db.Timestamptz(6)
+  lottery_programming_id Int
+  seller_id              Int
+  ticket_type_id         Int
+  price                  Float               @default(0)
+  ticket_prize           Float               @default(0)
+  is_computed            Boolean             @default(false)
+  lottery_programming    lottery_programming @relation(fields: [lottery_programming_id], references: [id], onUpdate: Restrict, map: "lottery_programming_id")
+  seller                 seller              @relation(fields: [seller_id], references: [user_id], onUpdate: Restrict, map: "seller_id")
+  ticket_type            ticket_type         @relation(fields: [ticket_type_id], references: [id], onUpdate: Restrict, map: "ticket_type_id")
+  bet_numbers            bet_number[]
+  is_cancelled           Boolean             @default(false)
+  monazo_bet_numbers     monazo_bet_number[]
+  parley_bet_numbers     parley_bet_number[]
+}
+
+model ticket_type {
+  id      Int      @id
+  name    String
+  tickets ticket[]
+}
+
+model billing_statement {
+  id                       Int                        @id @default(autoincrement())
+  billing_date             DateTime                   @db.Timestamptz(6)
+  seller_billing_statement seller_billing_statement[]
+  lottery_programming_id   Int                        @unique
+  lottery_programming      lottery_programming        @relation(fields: [lottery_programming_id], references: [id], onUpdate: Restrict, map: "lottery_programming_id")
+}
+
+model seller_billing_statement {
+  seller_id            Int
+  billing_statement_id Int
+  seller               seller            @relation(fields: [seller_id], references: [user_id], onUpdate: Restrict, map: "seller_id")
+  billing_statement    billing_statement @relation(fields: [billing_statement_id], references: [id], onUpdate: Restrict, map: "billing_statement_id")
+  quantity_sold        Float
+  commission           Float
+  prize_to_be_paid     Float
+
+  @@id([seller_id, billing_statement_id])
+}
+
+model license_update {
+  id              Int      @id @default(autoincrement())
+  operation_date  DateTime @default(now())
+  expiration_date DateTime @default(now())
+  responsible     user?    @relation(fields: [responsibleId], references: [id])
+  responsibleId   Int?
+  license_id      Int
+  license         license  @relation(fields: [license_id], references: [id])
+}
+
+model plan {
+  id             Int       @id @default(autoincrement())
+  name           String
+  seller_count   Int
+  monthly_price  Float
+  administrators Int
+  allowed_banks  Int       @default(0)
+  licenses       license[]
+  is_deleted     Boolean   @default(false)
+}
+
+model license {
+  id              Int              @id @default(autoincrement())
+  plan_id         Int
+  creation_date   DateTime         @default(now())
+  expiration_date DateTime
+  active          Boolean          @default(true)
+  plan            plan             @relation(fields: [plan_id], references: [id], onUpdate: Restrict, map: "plan_id")
+  license_update  license_update[]
+  user            user?            @relation(fields: [userId], references: [id])
+  userId          Int?
+}
+
+model restricted_number {
+  id         Int     @id @default(autoincrement())
+  lottery_id Int
+  number     Int
+  amount     Float
+  is_deleted Boolean @default(false)
+  lottery    lottery @relation(fields: [lottery_id], references: [id], onUpdate: Restrict, map: "lottery_id")
+}
+
+model seller_restricted_numbers {
+  id         Int     @id @default(autoincrement())
+  lottery_id Int
+  number     Int
+  amount     Float
+  is_deleted Boolean @default(false)
+  lottery    lottery @relation(fields: [lottery_id], references: [id], onUpdate: Restrict, map: "lottery_id")
+}
+
+model programming_restricted_numbers {
+  id             Int                 @id @default(autoincrement())
+  programming_id Int
+  number         Int
+  amount         Float
+  programming    lottery_programming @relation(fields: [programming_id], references: [id], onUpdate: Restrict, map: "programming_id")
+}
+
+model seller_programming_restricted_numbers {
+  id             Int                 @id @default(autoincrement())
+  seller_id      Int
+  programming_id Int
+  number         Int
+  amount         Float
+  seller         seller              @relation(fields: [seller_id], references: [user_id], onUpdate: Restrict)
+  programming    lottery_programming @relation(fields: [programming_id], references: [id], onUpdate: Restrict, map: "programming_id")
+}
